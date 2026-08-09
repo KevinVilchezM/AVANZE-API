@@ -18,7 +18,7 @@ class Cliente:
     @classmethod
     def from_dict(cls, datos):
         c = cls(datos["nombre"], datos["apellido"], datos["telefono"], datos["email"])
-        c.id = datos["id"]
+        c.id = datos.get("id")
         return c
 
     def __str__(self):

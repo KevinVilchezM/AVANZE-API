@@ -16,7 +16,7 @@ class Mecanico:
     @classmethod
     def from_dict(cls, datos):
         m = cls(datos["nombre"], datos["apellido"], datos["especialidad"])
-        m.id = datos["id"]
+        m.id = datos.get("id")
         return m
 
     def __str__(self):

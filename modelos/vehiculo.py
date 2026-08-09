@@ -20,7 +20,7 @@ class Vehiculo:
     @classmethod
     def from_dict(cls, datos):
         v = cls(datos["placa"], datos["marca"], datos["modelo"], datos["anio"], datos["id_cliente"])
-        v.id = datos["id"]
+        v.id = datos.get("id")
         return v
 
     def __str__(self):

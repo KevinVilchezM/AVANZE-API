@@ -20,7 +20,7 @@ class OrdenTrabajo:
     @classmethod
     def from_dict(cls, datos):
         ot = cls(datos["descripcion"], datos["estado"], datos["costo"], datos["id_vehiculo"], datos["id_mecanico"])
-        ot.id = datos["id"]
+        ot.id = datos.get("id")
         return ot
 
     def __str__(self):
