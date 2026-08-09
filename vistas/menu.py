@@ -5,7 +5,7 @@ from dao.vehiculo_dao import PlacaDuplicadaError, VehiculoNoEncontradoError
 from modelos.mecanico import Mecanico
 from dao.mecanico_dao import MecanicoNoEncontradoError
 from modelos.orden_trabajo import OrdenTrabajo
-from dao.orden_trabajo_dao import OrdenNoEncontradaError
+from dao.orden_trabajo_dao import OrdenTrabajoNoEncontradaError
 
 def mostrar_menu(cfg):
     print(f"\n{'=' * 45}")
@@ -231,7 +231,7 @@ def actualizar_orden(odao, mdao):
 
         o = odao.actualizar(orden_id, estado or None, costo, id_mecanico)
         print(f" OK Orden actualizada: {o}")
-    except OrdenNoEncontradaError as ex:
+    except OrdenTrabajoNoEncontradaError as ex:
         print(f" ERROR: {ex}")
     except ValueError:
         print(" ERROR: Los IDs deben ser enteros y el costo un número")
@@ -243,7 +243,7 @@ def eliminar_orden(odao):
         orden_id = int(input(" ID de la orden a eliminar: "))
         odao.eliminar(orden_id)
         print(f" OK Orden ID={orden_id} eliminada")
-    except OrdenNoEncontradaError as ex:
+    except OrdenTrabajoNoEncontradaError as ex:
         print(f" ERROR: {ex}")
     except ValueError:
         print(" ERROR: El ID debe ser un número entero")
