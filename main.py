@@ -5,7 +5,6 @@ from dao.vehiculo_dao import VehiculoDAO
 from dao.mecanico_dao import MecanicoDAO
 from dao.orden_trabajo_dao import OrdenTrabajoDAO
 from vistas.menu import mostrar_menu,agregar_cliente, listar_todocliente, actualizar_cliente, eliminar_cliente,agregar_vehiculo, listar_todovehiculo, actualizar_vehiculo, eliminar_vehiculo,agregar_mecanico, listar_todomecanico, actualizar_mecanico, eliminar_mecanico,agregar_orden, listar_todoorden, actualizar_orden, eliminar_orden
-from config.persistencia import cargar_clientes, guardar_clientes,cargar_vehiculos, guardar_vehiculos,cargar_mecanicos, guardar_mecanicos,cargar_ordenes, guardar_ordenes
 
 def main():
     cfg = SistemaConfig()
@@ -14,11 +13,6 @@ def main():
     mdao = MecanicoDAO()
     odao = OrdenTrabajoDAO()
 
-    cargar_clientes(cdao)
-    cargar_vehiculos(vdao)
-    cargar_mecanicos(mdao)
-    cargar_ordenes(odao)
-
     while True:
         mostrar_menu(cfg)
         opcion = input(" Elige una opción: ").strip()
@@ -26,16 +20,16 @@ def main():
         match opcion:
             case "1":
                 agregar_cliente(cdao)
-                guardar_clientes(cdao)
+                
             case "2":
                 agregar_vehiculo(vdao, cdao)
-                guardar_vehiculos(vdao)
+                
             case "3":
                 agregar_mecanico(mdao)
-                guardar_mecanicos(mdao)
+                
             case "4":
                 agregar_orden(odao, vdao, mdao)
-                guardar_ordenes(odao)
+                
             case "5":
                 listar_todocliente(cdao)
             case "6":
@@ -46,28 +40,28 @@ def main():
                 listar_todoorden(odao)
             case "9":
                 actualizar_cliente(cdao)
-                guardar_clientes(cdao)
+                
             case "10":
                 actualizar_vehiculo(vdao)
-                guardar_vehiculos(vdao)
+                
             case "11":
                 actualizar_mecanico(mdao)
-                guardar_mecanicos(mdao)
+                
             case "12":
                 actualizar_orden(odao, mdao)
-                guardar_ordenes(odao)
+                
             case "13":
                 eliminar_cliente(cdao)
-                guardar_clientes(cdao)
+                
             case "14":
                 eliminar_vehiculo(vdao)
-                guardar_vehiculos(vdao)
+                
             case "15":
                 eliminar_mecanico(mdao)
-                guardar_mecanicos(mdao)
+                
             case "16":
                 eliminar_orden(odao)
-                guardar_ordenes(odao)
+                
             case "17":
                 Logger().mostrar_logs()
             case "18":
