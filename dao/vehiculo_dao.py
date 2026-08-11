@@ -1,7 +1,7 @@
+import psycopg2
 from config.logger import Logger
 from config.base_datos import obtener_conexion
 from modelos.vehiculo import Vehiculo
-import sqlite3
 
 # EXCEPCIONES
 class VehiculoNoEncontradoError(Exception):
@@ -37,19 +37,25 @@ class VehiculoDAO:
     def buscar_por_id(self, vehiculo_id):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, placa, marca, modelo, anio, id_cliente FROM vehiculo WHERE id = ?", (vehiculo_id,))
-        fila = cursor.fetchone()
-        conn.close()
-        return self.__fila_a_vehiculo(fila) if fila else None
+        try:
+            cursor.execute("SELECT id, placa, marca, modelo, anio, id_cliente FROM vehiculo WHERE id = %s", (vehiculo_id,))
+            fila = cursor.fetchone()
+            return self.__fila_a_vehiculo(fila) if fila else None
+        finally:
+            cursor.close()
+            conn.close()
 
     # BUSCAR POR PLACA
     def buscar_por_placa(self, placa):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, placa, marca, modelo, anio, id_cliente FROM vehiculo WHERE placa = ?", (placa,))
-        fila = cursor.fetchone()
-        conn.close()
-        return self.__fila_a_vehiculo(fila) if fila else None
+        try:
+            cursor.execute("SELECT id, placa, marca, modelo, anio, id_cliente FROM vehiculo WHERE placa = %s", (placa,))
+            fila = cursor.fetchone()
+            return self.__fila_a_vehiculo(fila) if fila else None
+        finally:
+            cursor.close()
+            conn.close()
 
     # INSERTAR
     def insertar(self, vehiculo):
@@ -59,34 +65,45 @@ class VehiculoDAO:
 
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO vehiculo (placa, marca, modelo, anio, id_cliente) VALUES (?, ?, ?, ?, ?)",
-            (vehiculo.placa, vehiculo.marca, vehiculo.modelo, vehiculo.anio, vehiculo.id_cliente)
-        )
-        conn.commit()
-        vehiculo.id = cursor.lastrowid
-        conn.close()
-
-        self.__log.info(f"Vehículo agregado: {vehiculo.placa} (ID={vehiculo.id})")
-        return vehiculo
+        try:
+            cursor.execute(
+                "INSERT INTO vehiculo (placa, marca, modelo, anio, id_cliente) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+                (vehiculo.placa, vehiculo.marca, vehiculo.modelo, vehiculo.anio, vehiculo.id_cliente)
+            )
+            vehiculo.id = cursor.fetchone()["id"]
+            conn.commit()
+            self.__log.info(f"Vehículo agregado: {vehiculo.placa} (ID={vehiculo.id})")
+            return vehiculo
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
 
     # OBTENER TODOS
     def obtener_todos(self):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, placa, marca, modelo, anio, id_cliente FROM vehiculo ORDER BY marca, modelo")
-        filas = cursor.fetchall()
-        conn.close()
-        return [self.__fila_a_vehiculo(f) for f in filas]
+        try:
+            cursor.execute("SELECT id, placa, marca, modelo, anio, id_cliente FROM vehiculo ORDER BY marca, modelo")
+            filas = cursor.fetchall()
+            return [self.__fila_a_vehiculo(f) for f in filas]
+        finally:
+            cursor.close()
+            conn.close()
 
     # OBTENER POR CLIENTE
     def obtener_por_cliente(self, id_cliente):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, placa, marca, modelo, anio, id_cliente FROM vehiculo WHERE id_cliente = ?", (id_cliente,))
-        filas = cursor.fetchall()
-        conn.close()
-        return [self.__fila_a_vehiculo(f) for f in filas]
+        try:
+            cursor.execute("SELECT id, placa, marca, modelo, anio, id_cliente FROM vehiculo WHERE id_cliente = %s", (id_cliente,))
+            filas = cursor.fetchall()
+            return [self.__fila_a_vehiculo(f) for f in filas]
+        finally:
+            cursor.close()
+            conn.close()
 
     # ACTUALIZAR
     def actualizar(self, vehiculo_id, placa=None, marca=None, modelo=None, anio=None, id_cliente=None):
@@ -103,20 +120,25 @@ class VehiculoDAO:
 
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE vehiculo SET placa = ?, marca = ?, modelo = ?, anio = ?, id_cliente = ? WHERE id = ?",
-            (nueva_placa, nueva_marca, nuevo_modelo, nuevo_anio, nuevo_id_cliente, vehiculo_id)
-        )
-        conn.commit()
-        conn.close()
-
-        self.__log.info(f"Vehículo actualizado: ID={vehiculo_id}")
-        v.placa = nueva_placa
-        v.marca = nueva_marca
-        v.modelo = nuevo_modelo
-        v.anio = nuevo_anio
-        v.id_cliente = nuevo_id_cliente
-        return v
+        try:
+            cursor.execute(
+                "UPDATE vehiculo SET placa = %s, marca = %s, modelo = %s, anio = %s, id_cliente = %s WHERE id = %s",
+                (nueva_placa, nueva_marca, nuevo_modelo, nuevo_anio, nuevo_id_cliente, vehiculo_id)
+            )
+            conn.commit()
+            self.__log.info(f"Vehículo actualizado: ID={vehiculo_id}")
+            v.placa = nueva_placa
+            v.marca = nueva_marca
+            v.modelo = nuevo_modelo
+            v.anio = nuevo_anio
+            v.id_cliente = nuevo_id_cliente
+            return v
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
 
     # ELIMINAR
     def eliminar(self, vehiculo_id):
@@ -128,21 +150,25 @@ class VehiculoDAO:
         conn = obtener_conexion()
         cursor = conn.cursor()
         try:
-            cursor.execute("DELETE FROM vehiculo WHERE id = ?", (vehiculo_id,))
+            cursor.execute("DELETE FROM vehiculo WHERE id = %s", (vehiculo_id,))
             conn.commit()
-            conn.close()
             self.__log.info(f"Vehículo eliminado: ID={vehiculo_id}")
             return True
-        except sqlite3.IntegrityError:
-            conn.close()
+        except psycopg2.IntegrityError:
+            conn.rollback()
             self.__log.error(f"Eliminar fallido: Vehículo ID={vehiculo_id} tiene órdenes asociadas")
             raise VehiculoConOrdenesError(vehiculo_id)
+        finally:
+            cursor.close()
+            conn.close()
 
     # TOTAL
     def total(self):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM vehiculo")
-        total = cursor.fetchone()[0]
-        conn.close()
-        return total
+        try:
+            cursor.execute("SELECT COUNT(*) AS total FROM vehiculo")
+            return cursor.fetchone()["total"]
+        finally:
+            cursor.close()
+            conn.close()

@@ -1,7 +1,7 @@
+import psycopg2
 from config.logger import Logger
 from config.base_datos import obtener_conexion
 from modelos.mecanico import Mecanico
-import sqlite3
 
 # EXCEPCIONES
 class MecanicoNoEncontradoError(Exception):
@@ -27,34 +27,45 @@ class MecanicoDAO:
     def buscar_por_id(self, mecanico_id):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre, apellido, especialidad FROM mecanico WHERE id = ?", (mecanico_id,))
-        fila = cursor.fetchone()
-        conn.close()
-        return self.__fila_a_mecanico(fila) if fila else None
+        try:
+            cursor.execute("SELECT id, nombre, apellido, especialidad FROM mecanico WHERE id = %s", (mecanico_id,))
+            fila = cursor.fetchone()
+            return self.__fila_a_mecanico(fila) if fila else None
+        finally:
+            cursor.close()
+            conn.close()
 
     # INSERTAR
     def insertar(self, mecanico):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO mecanico (nombre, apellido, especialidad) VALUES (?, ?, ?)",
-            (mecanico.nombre, mecanico.apellido, mecanico.especialidad)
-        )
-        conn.commit()
-        mecanico.id = cursor.lastrowid
-        conn.close()
-
-        self.__log.info(f"Mecánico agregado: {mecanico.nombre} {mecanico.apellido} (ID={mecanico.id})")
-        return mecanico
+        try:
+            cursor.execute(
+                "INSERT INTO mecanico (nombre, apellido, especialidad) VALUES (%s, %s, %s) RETURNING id",
+                (mecanico.nombre, mecanico.apellido, mecanico.especialidad)
+            )
+            mecanico.id = cursor.fetchone()["id"]
+            conn.commit()
+            self.__log.info(f"Mecánico agregado: {mecanico.nombre} {mecanico.apellido} (ID={mecanico.id})")
+            return mecanico
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
 
     # OBTENER TODOS
     def obtener_todos(self):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre, apellido, especialidad FROM mecanico ORDER BY apellido, nombre")
-        filas = cursor.fetchall()
-        conn.close()
-        return [self.__fila_a_mecanico(f) for f in filas]
+        try:
+            cursor.execute("SELECT id, nombre, apellido, especialidad FROM mecanico ORDER BY apellido, nombre")
+            filas = cursor.fetchall()
+            return [self.__fila_a_mecanico(f) for f in filas]
+        finally:
+            cursor.close()
+            conn.close()
 
     # ACTUALIZAR
     def actualizar(self, mecanico_id, nombre=None, apellido=None, especialidad=None):
@@ -69,18 +80,23 @@ class MecanicoDAO:
 
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE mecanico SET nombre = ?, apellido = ?, especialidad = ? WHERE id = ?",
-            (nuevo_nombre, nuevo_apellido, nueva_especialidad, mecanico_id)
-        )
-        conn.commit()
-        conn.close()
-
-        self.__log.info(f"Mecánico actualizado: ID={mecanico_id}")
-        m.nombre = nuevo_nombre
-        m.apellido = nuevo_apellido
-        m.especialidad = nueva_especialidad
-        return m
+        try:
+            cursor.execute(
+                "UPDATE mecanico SET nombre = %s, apellido = %s, especialidad = %s WHERE id = %s",
+                (nuevo_nombre, nuevo_apellido, nueva_especialidad, mecanico_id)
+            )
+            conn.commit()
+            self.__log.info(f"Mecánico actualizado: ID={mecanico_id}")
+            m.nombre = nuevo_nombre
+            m.apellido = nuevo_apellido
+            m.especialidad = nueva_especialidad
+            return m
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
 
     # ELIMINAR
     def eliminar(self, mecanico_id):
@@ -92,21 +108,26 @@ class MecanicoDAO:
         conn = obtener_conexion()
         cursor = conn.cursor()
         try:
-            cursor.execute("DELETE FROM mecanico WHERE id = ?", (mecanico_id,))
+            cursor.execute("DELETE FROM mecanico WHERE id = %s", (mecanico_id,))
             conn.commit()
-            conn.close()
             self.__log.info(f"Mecánico eliminado: ID={mecanico_id}")
             return True
-        except sqlite3.IntegrityError:
-            conn.close()
+        except psycopg2.IntegrityError:
+            conn.rollback()
             self.__log.error(f"Eliminar fallido: Mecánico ID={mecanico_id} tiene órdenes asociadas")
             raise MecanicoConOrdenesError(mecanico_id)
+        finally:
+            cursor.close()
+            conn.close()
 
     # TOTAL
     def total(self):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM mecanico")
-        total = cursor.fetchone()[0]
-        conn.close()
-        return total
+        try:
+            cursor.execute("SELECT COUNT(*) AS total FROM mecanico")
+            total = cursor.fetchone()["total"]
+            return total
+        finally:
+            cursor.close()
+            conn.close()

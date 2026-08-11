@@ -1,7 +1,7 @@
+import psycopg2
 from config.logger import Logger
 from config.base_datos import obtener_conexion
 from modelos.orden_trabajo import OrdenTrabajo
-import sqlite3
 
 # EXCEPCIONES
 class OrdenTrabajoNoEncontradaError(Exception):
@@ -29,45 +29,58 @@ class OrdenTrabajoDAO:
     def buscar_por_id(self, orden_id):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, descripcion, estado, costo, id_mecanico, id_vehiculo FROM orden_trabajo WHERE id = ?", (orden_id,))
-        fila = cursor.fetchone()
-        conn.close()
-        return self.__fila_a_orden(fila) if fila else None
+        try:
+            cursor.execute("SELECT id, descripcion, estado, costo, id_mecanico, id_vehiculo FROM orden_trabajo WHERE id = %s", (orden_id,))
+            fila = cursor.fetchone()
+            return self.__fila_a_orden(fila) if fila else None
+        finally:
+            cursor.close()
+            conn.close()
 
     # INSERTAR
     def insertar(self, orden):
         estado_inicial = getattr(orden, 'estado', 'Pendiente')
-
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO orden_trabajo (descripcion, estado, costo, id_mecanico, id_vehiculo) VALUES (?, ?, ?, ?, ?)",
-            (orden.descripcion, estado_inicial, orden.costo, orden.id_mecanico, orden.id_vehiculo)
-        )
-        conn.commit()
-        orden.id = cursor.lastrowid
-        conn.close()
-
-        self.__log.info(f"Orden de Trabajo agregada: ID={orden.id}")
-        return orden
+        try:
+            cursor.execute(
+                "INSERT INTO orden_trabajo (descripcion, estado, costo, id_mecanico, id_vehiculo) VALUES (%s, %s, %s, %s, %s) RETURNING id",
+                (orden.descripcion, estado_inicial, orden.costo, orden.id_mecanico, orden.id_vehiculo)
+            )
+            orden.id = cursor.fetchone()["id"]
+            conn.commit()
+            self.__log.info(f"Orden de Trabajo agregada: ID={orden.id}")
+            return orden
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
 
     # OBTENER TODAS
     def obtener_todas(self):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, descripcion, estado, costo, id_mecanico, id_vehiculo FROM orden_trabajo ORDER BY id DESC")
-        filas = cursor.fetchall()
-        conn.close()
-        return [self.__fila_a_orden(f) for f in filas]
+        try:
+            cursor.execute("SELECT id, descripcion, estado, costo, id_mecanico, id_vehiculo FROM orden_trabajo ORDER BY id DESC")
+            filas = cursor.fetchall()
+            return [self.__fila_a_orden(f) for f in filas]
+        finally:
+            cursor.close()
+            conn.close()
 
     # OBTENER POR ESTADO
     def obtener_por_estado(self, estado):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, descripcion, estado, costo, id_mecanico, id_vehiculo FROM orden_trabajo WHERE estado = ?", (estado,))
-        filas = cursor.fetchall()
-        conn.close()
-        return [self.__fila_a_orden(f) for f in filas]
+        try:
+            cursor.execute("SELECT id, descripcion, estado, costo, id_mecanico, id_vehiculo FROM orden_trabajo WHERE estado = %s", (estado,))
+            filas = cursor.fetchall()
+            return [self.__fila_a_orden(f) for f in filas]
+        finally:
+            cursor.close()
+            conn.close()
 
     # ACTUALIZAR
     def actualizar(self, orden_id, descripcion=None, estado=None, costo=None, id_mecanico=None, id_vehiculo=None):
@@ -84,20 +97,25 @@ class OrdenTrabajoDAO:
 
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE orden_trabajo SET descripcion = ?, estado = ?, costo = ?, id_mecanico = ?, id_vehiculo = ? WHERE id = ?",
-            (nueva_descripcion, nuevo_estado, nuevo_costo, nuevo_id_mecanico, nuevo_id_vehiculo, orden_id)
-        )
-        conn.commit()
-        conn.close()
-
-        self.__log.info(f"Orden de Trabajo actualizada: ID={orden_id}")
-        o.descripcion = nueva_descripcion
-        o.estado = nuevo_estado
-        o.costo = nuevo_costo
-        o.id_mecanico = nuevo_id_mecanico
-        o.id_vehiculo = nuevo_id_vehiculo
-        return o
+        try:
+            cursor.execute(
+                "UPDATE orden_trabajo SET descripcion = %s, estado = %s, costo = %s, id_mecanico = %s, id_vehiculo = %s WHERE id = %s",
+                (nueva_descripcion, nuevo_estado, nuevo_costo, nuevo_id_mecanico, nuevo_id_vehiculo, orden_id)
+            )
+            conn.commit()
+            self.__log.info(f"Orden de Trabajo actualizada: ID={orden_id}")
+            o.descripcion = nueva_descripcion
+            o.estado = nuevo_estado
+            o.costo = nuevo_costo
+            o.id_mecanico = nuevo_id_mecanico
+            o.id_vehiculo = nuevo_id_vehiculo
+            return o
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
 
     # ELIMINAR
     def eliminar(self, orden_id):
@@ -108,17 +126,22 @@ class OrdenTrabajoDAO:
 
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM orden_trabajo WHERE id = ?", (orden_id,))
-        conn.commit()
-        conn.close()
-        self.__log.info(f"Orden de Trabajo eliminada: ID={orden_id}")
-        return True
+        try:
+            cursor.execute("DELETE FROM orden_trabajo WHERE id = %s", (orden_id,))
+            conn.commit()
+            self.__log.info(f"Orden de Trabajo eliminada: ID={orden_id}")
+            return True
+        finally:
+            cursor.close()
+            conn.close()
 
     # TOTAL
     def total(self):
         conn = obtener_conexion()
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM orden_trabajo")
-        total = cursor.fetchone()[0]
-        conn.close()
-        return total
+        try:
+            cursor.execute("SELECT COUNT(*) AS total FROM orden_trabajo")
+            return cursor.fetchone()["total"]
+        finally:
+            cursor.close()
+            conn.close()
