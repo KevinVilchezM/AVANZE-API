@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config.base_datos import inicializar
 from routers import cliente, vehiculo, mecanico, orden_trabajo
 
+
 app = FastAPI(
     title="Sistema de Gestión de Taller de Autos",
     version="1.0",
@@ -11,7 +12,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -14,13 +14,14 @@ class OrdenTrabajoDAO:
         self.__log = Logger()
 
     # MAPEO DE FILA A OBJETO
+    # MAPEO DE FILA A OBJETO
     def __fila_a_orden(self, fila):
         o = OrdenTrabajo(
             fila["descripcion"],
-            fila["costo"],
-            fila["id_mecanico"],
-            fila["id_vehiculo"],
-            fila["estado"]
+            fila["estado"],       # <-- 1. Estado corregido
+            fila["costo"],        # <-- 2. Costo corregido
+            fila["id_vehiculo"],  # <-- 3. ID de vehículo
+            fila["id_mecanico"]   # <-- 4. ID de mecánico
         )
         o.id = fila["id"]
         return o
@@ -59,7 +60,7 @@ class OrdenTrabajoDAO:
             conn.close()
 
     # OBTENER TODAS
-    def obtener_todas(self):
+    def obtener_todos(self):
         conn = obtener_conexion()
         cursor = conn.cursor()
         try:
