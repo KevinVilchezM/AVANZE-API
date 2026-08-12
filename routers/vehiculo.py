@@ -24,7 +24,7 @@ def crear_vehiculo(datos: VehiculoCrear):
         return v.to_dict()
     except PlacaDuplicadaError as ex:
         raise HTTPException(status_code=400, detail=str(ex))
-    except ClienteNoExisteError as ex:  # <--- Nuevo manejo de error
+    except ClienteNoExisteError as ex:
         raise HTTPException(status_code=400, detail=str(ex))
 
 @router.put("/{vehiculo_id}", response_model=VehiculoRespuesta)
@@ -34,7 +34,7 @@ def actualizar_vehiculo(vehiculo_id: int, datos: VehiculoActualizar):
         return v.to_dict()
     except VehiculoNoEncontradoError as ex:
         raise HTTPException(status_code=404, detail=str(ex))
-    except ClienteNoExisteError as ex:  # <--- Nuevo manejo de error
+    except ClienteNoExisteError as ex:
         raise HTTPException(status_code=400, detail=str(ex))
 
 @router.delete("/{vehiculo_id}")
