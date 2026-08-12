@@ -273,8 +273,8 @@ function App() {
           <div className="container-fluid px-0">
             <div className="row mb-4">
               <div className="col-12">
-                <h2 className="text-white fw-bold mb-1">Panel de Control</h2>
-                <p className="text-muted">Resumen general del taller automotriz</p>
+                <h2 className="text-danger fw-bold mb-1">Panel de Control</h2>
+                <p className="text-white">Resumen general del taller automotriz</p>
               </div>
             </div>
 
