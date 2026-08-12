@@ -9,6 +9,7 @@ def obtener_conexion():
         database=os.getenv("DB_NAME", "taller_autos_db"), 
         user=os.getenv("DB_USER", "postgres"),
         password=os.getenv("DB_PASSWORD", ""),
+        cursor_factory=RealDictCursor
     )
     
     # Esto asegura que los resultados sean diccionarios
