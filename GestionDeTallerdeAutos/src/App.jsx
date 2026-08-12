@@ -270,12 +270,120 @@ function App() {
         
         {/* DASHBOARD */}
         {pantalla === 'dashboard' && (
-          <div>
-            <h2>Dashboard</h2>
-            <div style={styles.cardsContainer}>
-              <div style={styles.card}>AUTOS <h3>{vehiculos.length}</h3></div>
-              <div style={styles.card}>MECÁNICOS <h3>{mecanicos.length}</h3></div>
-              <div style={styles.card}>ÓRDENES <h3>{ordenes.length}</h3></div>
+          <div className="container-fluid px-0">
+            <div className="row mb-4">
+              <div className="col-12">
+                <h2 className="text-white fw-bold mb-1">Panel de Control</h2>
+                <p className="text-muted">Resumen general del taller automotriz</p>
+              </div>
+            </div>
+
+            {/* Tarjetas de Métricas Superiores */}
+            <div className="row g-4 mb-4">
+              <div className="col-md-4">
+                <div className="card bg-dark text-white border-primary shadow h-100 py-2">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="text-xs fw-bold text-primary text-uppercase mb-1">Vehículos Registrados</div>
+                        <div className="h4 fw-bold mb-0">{vehiculos.length}</div>
+                      </div>
+                      <span className="fs-1 text-primary">🚗</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="card bg-dark text-white border-success shadow h-100 py-2">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="text-xs fw-bold text-success text-uppercase mb-1">Mecánicos Activos</div>
+                        <div className="h4 fw-bold mb-0">{mecanicos.length}</div>
+                      </div>
+                      <span className="fs-1 text-success">👨‍🔧</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="card bg-dark text-white border-warning shadow h-100 py-2">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <div className="text-xs fw-bold text-warning text-uppercase mb-1">Órdenes de Trabajo</div>
+                        <div className="h4 fw-bold mb-0">{ordenes.length}</div>
+                      </div>
+                      <span className="fs-1 text-warning">📋</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sección Inferior: Órdenes Recientes y Resumen del Taller */}
+            <div className="row g-4">
+              {/* Tabla compacta de órdenes recientes */}
+              <div className="col-md-7">
+                <div className="card bg-dark text-white border-secondary shadow h-100">
+                  <div className="card-header border-secondary fw-bold bg-transparent">Últimas Órdenes Registradas</div>
+                  <div className="card-body p-0">
+                    <div className="table-responsive">
+                      <table className="table table-dark table-hover mb-0 align-middle">
+                        <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ordenes.slice(0, 5).map((o) => (
+                            <tr key={o.id}>
+                              <td className="fw-bold">{o.id}</td>
+                              <td>{o.descripcion}</td>
+                              <td><span className="badge bg-warning text-dark">{o.estado || 'En Proceso'}</span></td>
+                            </tr>
+                          ))}
+                          {ordenes.length === 0 && (
+                            <tr>
+                              <td colSpan="3" className="text-center text-muted py-3">No hay órdenes registradas aún.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Panel de Estadísticas / Estado del Taller */}
+              <div className="col-md-5">
+                <div className="card bg-dark text-white border-secondary shadow h-100 p-4">
+                  <h5 className="mb-4 fw-bold">Estado del Taller</h5>
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between mb-1 small">
+                      <span>En Proceso</span>
+                      <span className="text-warning fw-bold">Activo</span>
+                    </div>
+                    <div className="progress" style={{ height: '8px', backgroundColor: '#2b3035' }}>
+                      <div className="progress-bar bg-warning" style={{ width: '70%' }}></div>
+                    </div>
+                  </div>
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between mb-1 small">
+                      <span>Completadas</span>
+                      <span className="text-success fw-bold">Estable</span>
+                    </div>
+                    <div className="progress" style={{ height: '8px', backgroundColor: '#2b3035' }}>
+                      <div className="progress-bar bg-success" style={{ width: '30%' }}></div>
+                    </div>
+                  </div>
+                  <p className="text-muted small mt-3 mb-0">
+                    💡 Consejo: Puedes registrar nuevos vehículos y mecánicos desde sus respectivas pestañas para que aparezcan automáticamente en las órdenes.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         )}
