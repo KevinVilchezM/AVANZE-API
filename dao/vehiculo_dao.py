@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.errors
 from config.logger import Logger
 from config.base_datos import obtener_conexion
 from modelos.vehiculo import Vehiculo
@@ -16,6 +17,9 @@ class VehiculoConOrdenesError(Exception):
     def __init__(self, vehiculo_id):
         super().__init__(f"Vehículo ID={vehiculo_id} no se puede eliminar: tiene órdenes asociadas")
 
+class ClienteNoExisteError(Exception):
+    def __init__(self, mensaje="El cliente especificado no existe en la base de datos"):
+        super().__init__(mensaje)
 # CLASE VEHICULO DAO
 class VehiculoDAO:
     def __init__(self):
@@ -74,6 +78,10 @@ class VehiculoDAO:
             conn.commit()
             self.__log.info(f"Vehículo agregado: {vehiculo.placa} (ID={vehiculo.id})")
             return vehiculo
+        except psycopg2.errors.ForeignKeyViolation:
+            conn.rollback()
+            self.__log.error(f"Error de integridad: El clienteID={vehiculo.id_cliente} no existe")
+            raise ClienteNoExisteError(f"El cliente con ID {vehiculo.id_cliente} no se encuentra registrado.")
         except Exception as e:
             conn.rollback()
             raise e
@@ -133,6 +141,9 @@ class VehiculoDAO:
             v.anio = nuevo_anio
             v.id_cliente = nuevo_id_cliente
             return v
+        except psycopg2.errors.ForeignKeyViolation:
+            conn.rollback()
+            self.__log.error(f"Error de integridad al actualizar: El cliente ID={nuevo_id_cliente} no existe")
         except Exception as e:
             conn.rollback()
             raise e
