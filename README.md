@@ -37,13 +37,14 @@ python -m pip install uvicorn (instalar uvicorn)
 
 # Iniciar servidor (asegúrate de configurar tus variables de entorno DB_PASSWORD)
 $env:DB_PASSWORD = "admin123"
-uvicorn main:app --reload
+python -m uvicorn main:app --reload
 Frontend (React)
 Abre una nueva terminal y dirígete a la carpeta del frontend:
 
 Bash
 cd GestionDeTallerdeAutos
-
+npm install bootstrap bootstrap-icons
+npm install axios
 # Instalar dependencias
 npm install
 

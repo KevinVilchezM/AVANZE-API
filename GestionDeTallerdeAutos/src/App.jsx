@@ -246,7 +246,7 @@ function App() {
   // 2. VISTAS PRINCIPALES
   return (
     <div style={styles.mainLayoutContainer}>
-      <nav className="navbar navbar-expand-lg navbar-dark px-3" style={{ backgroundColor: '#161c27', borderBottom: '1px solid #222d3f' }}>
+      <nav className="navbar navbar-expand-lg navbar-dark px-3" style={{ backgroundColor: '#1a38e2', borderBottom: '1px solid #1814e2' }}>
         <div className="container-fluid">
           <span className="navbar-brand" style={{ fontSize: '14px', cursor: 'pointer', fontWeight: 'bold' }} onClick={() => setPantalla('dashboard')}>
             TALLER DE AUTOS
@@ -390,8 +390,8 @@ function App() {
 
         {/* CLIENTES */}
         {pantalla === 'clientes' && (
-          <div>
-            <h2>Gestión de Clientes</h2>
+          <div style={{ marginLeft: '30px', marginTop: '20px' }}>
+            <h2 className="text-primary">Gestión de Clientes</h2>
             <div style={styles.formBox}>
               <h3>Registrar Cliente</h3>
               <label style={styles.label}>NOMBRES Y APELLIDOS</label>
@@ -626,7 +626,7 @@ function App() {
 const styles = {
   loginContainer: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' },
   loginBox: { backgroundColor: '#1b2331', padding: '40px', borderRadius: '8px', textAlign: 'center', width: '300px', border: '1px solid #2a3447' },
-  mainLayoutContainer: { display: 'flex', flexDirection: 'column', minHeight: '100vh' },
+  mainLayoutContainer: { display: 'flex', flexDirection: 'column', minHeight: '100vh' ,backgroundColor: '#1e3a8a'},
   content: { flex: 1, padding: '40px', overflowY: 'auto' },
   input: { width: '100%', padding: '10px', marginTop: '5px', marginBottom: '15px', backgroundColor: '#d1d5db', color: '#000000', border: 'none', borderRadius: '4px', boxSizing: 'border-box' },
   label: { fontSize: '12px', color: '#9ba3af', display: 'block' },
